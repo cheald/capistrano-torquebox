@@ -46,9 +46,21 @@ end
 
 namespace :deploy do
   desc "Restart Application"
-  task :restart do
-    on roles(:app), in: :sequence, wait: 5 do
+  task :deploy do
+    on roles(:app) do
       execute "touch #{fetch(:jboss_home)}/standalone/deployments/#{fetch(:torquebox_app_name, fetch(:application))}-knob.yml.dodeploy"
+    end
+  end
+
+  task :undeploy do
+    on roles(:app) do
+      execute "rm #{fetch(:jboss_home)}/standalone/deployments/#{fetch(:torquebox_app_name, fetch(:application))}-knob.yml.deployed"
+    end
+  end
+
+  task :restart do
+    on roles(:app) do
+      execute "touch #{current_path}/tmp/restart.txt"
     end
   end
 
@@ -145,7 +157,7 @@ namespace :deploy do
     task :deployment_descriptor do
       puts "creating deployment descriptor"
 
-      dd_str  = YAML.dump_stream(create_deployment_descriptor(release_path))
+      dd_str  = YAML.dump_stream(create_deployment_descriptor(current_path))
       dd_file = "#{fetch(:jboss_home)}/standalone/deployments/#{fetch(:torquebox_app_name, fetch(:application))}-knob.yml"
 
       on roles(:app), in: :sequence, wait: 5 do
